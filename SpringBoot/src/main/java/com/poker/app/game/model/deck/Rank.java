@@ -14,4 +14,11 @@ public enum Rank {
         return value;
     }
 
+    @Override
+    public String toString() {
+        if (this == TEN) {
+            return "10";
+        }
+        return name().substring(0, 1).toUpperCase();
+    }
 }

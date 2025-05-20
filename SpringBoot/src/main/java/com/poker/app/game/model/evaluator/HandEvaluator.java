@@ -1,4 +1,4 @@
-package com.poker.app.game.evaluator;
+package com.poker.app.game.model.evaluator;
 
 import com.poker.app.game.model.deck.Card;
 import com.poker.app.game.model.deck.CardFactory;
@@ -266,6 +266,7 @@ public final class HandEvaluator {
     }
 
     public static HandEvaluation getHandEvaluation(List<Card> combinedCards) {
+        Objects.requireNonNull(combinedCards);
         List<Card> cards = new ArrayList<>(combinedCards);
         // Calculate default high-card hand
         HandEvaluation highCardHandEvaluation = new HandEvaluation(HandType.HIGH_CARD, List.of(), cards);

@@ -1,4 +1,4 @@
-package com.poker.app.game;
+package com.poker.app.game.model;
 
 import java.util.ArrayList;
 import java.util.BitSet;

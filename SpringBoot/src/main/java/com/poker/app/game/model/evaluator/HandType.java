@@ -1,4 +1,4 @@
-package com.poker.app.game.evaluator;
+package com.poker.app.game.model.evaluator;
 
 public enum HandType {
     ROYAL_FLUSH(9, 0),

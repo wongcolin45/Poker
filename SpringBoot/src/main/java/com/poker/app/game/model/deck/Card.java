@@ -8,7 +8,7 @@ public record Card(Rank rank, Suit suit) implements Comparable<Card> {
 
     @Override
     public String toString() {
-        return rank + " of " + suit;
+        return rank.toString() + suit.toString();
     }
 
     @Override
@@ -23,4 +23,6 @@ public record Card(Rank rank, Suit suit) implements Comparable<Card> {
     public int compareTo(Card card) {
         return this.rank.getValue() - card.rank.getValue();
     }
+
+
 }

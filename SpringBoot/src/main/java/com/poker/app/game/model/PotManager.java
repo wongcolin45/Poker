@@ -1,26 +1,24 @@
-package com.poker.app.game;
+package com.poker.app.game.model;
 
-import com.poker.app.game.model.CardUtils;
-
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class PotManager {
 
     private int callAmount;
 
-    private int[] playerChips;
+    private final int[] playerChips;
 
-    private int[] playerBets;
+    private final int[] playerBets;
 
     private final PlayerRotation rotation;
 
     public PotManager(int[] playerChips, PlayerRotation rotation) {
         callAmount = 0;
-        playerBets = null;
         this.playerChips = Objects.requireNonNull(playerChips).clone();
+        this.playerBets = new int[playerChips.length];
         this.rotation = Objects.requireNonNull(rotation);
     }
 
@@ -74,6 +72,7 @@ public class PotManager {
     }
 
     public boolean playersAllIn() {
+
         for (int i : rotation.getActiveIndexes()) {
             if (playerChips[i] > 0) {
                 return false;
@@ -88,6 +87,31 @@ public class PotManager {
 
     public int getCallAmount() {
         return callAmount;
+    }
+
+    public int[] getPayouts(List<Integer> winners) {
+        Objects.requireNonNull(winners);
+        int[] payouts = new int[playerBets.length];
+        if (winners.size() == 1 || winners.stream().distinct().count() <= 1) {
+            int totalPot = 0;
+            for (int i = 0; i < playerBets.length; i++) {
+                totalPot += playerBets[i];
+            }
+            for (int winner : winners) {
+                payouts[winner] = totalPot / winners.size();
+            }
+            return payouts;
+        }
+        List<Integer> sortedWinners = new ArrayList<>(winners);
+        sortedWinners.sort((a, b) -> Integer.compare(playerBets[a], playerBets[b]));
+        int previousBet = 0;
+        for (int i = 0; i < winners.size(); i++) {
+            int payout = (playerBets[i] - previousBet) * (winners.size() - i);
+            for (int j = i; j < winners.size(); j++) {
+                payouts[sortedWinners.get(j)] += payout;
+            }
+        }
+        return payouts;
     }
 
 

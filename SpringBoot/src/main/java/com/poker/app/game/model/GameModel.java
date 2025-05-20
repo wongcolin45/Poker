@@ -1,10 +1,9 @@
 package com.poker.app.game.model;
 
-import com.poker.app.game.Round;
-import com.poker.app.game.PlayerRotation;
+import com.poker.app.game.model.deck.Card;
 import com.poker.app.game.model.player.Move;
 import java.util.Arrays;
-
+import java.util.List;
 
 
 public class GameModel implements ViewableModel {
@@ -13,7 +12,7 @@ public class GameModel implements ViewableModel {
 
     private int smallBlindIndex;
 
-    private final int[] playerChips;
+    private int[] playerChips;
 
     private final PlayerRotation rotation;
 
@@ -23,6 +22,14 @@ public class GameModel implements ViewableModel {
         smallBlindIndex = 0;
         playerChips = new int[players];
         Arrays.fill(playerChips, STARTING_CHIPS);
+        rotation = new PlayerRotation(players, 0);
+    }
+
+
+    public GameModel(int players, int startingChips) {
+        smallBlindIndex = 0;
+        playerChips = new int[players];
+        Arrays.fill(playerChips, startingChips);
         rotation = new PlayerRotation(players, 0);
     }
 
@@ -45,13 +52,16 @@ public class GameModel implements ViewableModel {
             throw new IllegalStateException("Round is over, you cannot end it again");
         }
         smallBlindIndex = rotation.getNext(smallBlindIndex);
-        round = null;
+        playerChips = round.getPayouts();
     }
 
     public boolean isRoundOver() {
         return round != null && round.isOver();
     }
 
+    public PlayerRotation getRotation() {
+        return rotation;
+    }
 
     @Override
     public int getPlayerChips(int playerIndex) {
@@ -61,9 +71,14 @@ public class GameModel implements ViewableModel {
         return playerChips[playerIndex];
     }
 
-    public PlayerRotation getRotation() {
-        return rotation;
+    @Override
+    public List<Card> getCommunityCards() {
+        if (round == null) {
+            throw new IllegalStateException("Round is not started, you cannot get community cards");
+        }
+        return round.getCommunityCards();
     }
+
 
     public int getPlayerCount() {
         return rotation.getActiveCount();
@@ -79,8 +94,6 @@ public class GameModel implements ViewableModel {
         }
         return getPlayerChips(rotation.getTurn());
     }
-
-
 
     public int[] getPlayerChips() {
         return playerChips;

@@ -2,6 +2,9 @@ package com.poker.app.game.evaluator;
 
 import com.poker.app.game.model.deck.Card;
 import com.poker.app.game.model.deck.CardFactory;
+import com.poker.app.game.model.evaluator.HandEvaluator;
+import com.poker.app.game.model.evaluator.HandType;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import java.util.Collections;

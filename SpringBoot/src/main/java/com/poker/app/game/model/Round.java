@@ -1,8 +1,8 @@
-package com.poker.app.game;
+package com.poker.app.game.model;
 
-import com.poker.app.game.model.GameModel;
 import com.poker.app.game.model.deck.Card;
 import com.poker.app.game.model.deck.Deck;
+import com.poker.app.game.model.evaluator.HandEvaluator;
 import com.poker.app.game.model.player.Action;
 import com.poker.app.game.model.player.Move;
 
@@ -20,7 +20,7 @@ public class Round {
 
     private int bettingRound = 1;
 
-    private int startIndex;
+    private int start;
 
     private boolean loopMade;
 
@@ -36,7 +36,18 @@ public class Round {
 
     private final GameModel model;
 
-    public Round(GameModel model, int startIndex, int smallBlind, int bigBlind) {
+    private void endBettingRound() {
+        if (bettingRound == 1) {
+            for (int i = 0; i < 3; i++) {
+                communityCards.add(deck.draw());
+            }
+        } else if (bettingRound == 2 || bettingRound == 3) {
+            communityCards.add(deck.draw());
+        }
+        bettingRound++;
+    }
+
+    public Round(GameModel model, int start, int smallBlind, int bigBlind) {
         if (model.getRotation().singlePlayer()) {
             throw new IllegalArgumentException("Single player round not supported");
         }
@@ -52,9 +63,9 @@ public class Round {
             playerHands.put(rotation.getTurn(), deck.drawHand());
             rotation.next();
         }
-        turn = startIndex;
+        turn = start;
         this.potManager = new PotManager(model.getPlayerChips(), rotation);
-        this.startIndex = startIndex;
+        this.start = start;
         loopMade = false;
     }
 
@@ -68,15 +79,18 @@ public class Round {
                 break;
             case Action.CALL:
                 potManager.call(turn);
-                potManager.call(turn);
             case Action.RAISE:
                 potManager.raise(turn, move.getRaiseAmount());
                 break;
             default:
+                potManager.allIn(turn);
                 break;
         }
-        if (turn > rotation.getNext(turn)) {
+        if (rotation.getNext(turn) == start) {
             loopMade = true;
+        }
+        if (move.getAction() == Action.FOLD) {
+            start = rotation.getNext(start);
         }
         if (loopMade && !potManager.unmatchedBet()) {
             loopMade = false;
@@ -85,20 +99,26 @@ public class Round {
         turn = rotation.getNext(turn);
     }
 
-    private void endBettingRound() {
-        if (bettingRound == 1) {
-            for (int i = 0; i < 3; i++) {
-                communityCards.add(deck.draw());
-            }
-        } else if (bettingRound == 2 || bettingRound == 3) {
-            communityCards.add(deck.draw());
-        }
-        bettingRound++;
+    public List<Card> getCommunityCards() {
+        return new ArrayList<>(communityCards);
     }
 
     public boolean isOver() {
-        return potManager.playersAllIn() || rotation.singlePlayer()  || bettingRound > 5  || potManager.playersAllIn();
+        return potManager.playersAllIn() || rotation.singlePlayer() || bettingRound > 5  || potManager.playersAllIn();
     }
+
+    public int[] getPayouts() {
+        if (!isOver()) {
+            throw new IllegalStateException("Round is not over, you cannot get the result");
+        }
+        while (communityCards.size() < 5) {
+            communityCards.add(deck.draw());
+        }
+        List<Integer> winners = HandEvaluator.getWinningPlayer(playerHands, communityCards);
+        return potManager.getPayouts(winners);
+    }
+
+
 
 
 
