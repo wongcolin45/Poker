@@ -22,7 +22,7 @@ import java.util.Objects;
  */
 public final class HandEvaluator {
 
-    public static class HandEvaluation {
+    public static class Evaluation {
 
         private final HandType hand;
 
@@ -32,7 +32,7 @@ public final class HandEvaluator {
 
         private final List<Card> unusedCards;
 
-        public HandEvaluation(HandType hand, List<Card> cardsUsed, List<Card> unusedCards) {
+        public Evaluation(HandType hand, List<Card> cardsUsed, List<Card> unusedCards) {
             if (cardsUsed.size() + unusedCards.size() != 7) {
                 throw new IllegalArgumentException("Cards used and unused cards must be 7 cards long");
             }
@@ -83,30 +83,30 @@ public final class HandEvaluator {
     }
 
 
-    private static HandEvaluation getMatchType(List<Card> cards, Map<Rank, List<Card>> cardPairs,
-                                               Rank bestRank, int bestCount, Rank secondBestRank, int secondBestCount) {
+    private static Evaluation getMatchType(List<Card> cards, Map<Rank, List<Card>> cardPairs,
+                                           Rank bestRank, int bestCount, Rank secondBestRank, int secondBestCount) {
         List<Card> bestCards = cardPairs.get(bestRank);
         cards.removeAll(bestCards);
         List<Card> kickers;
         if (bestCount == 2) {
             if (secondBestCount == 1) {
-                return new HandEvaluation(HandType.ONE_PAIR, bestCards, cards);
+                return new Evaluation(HandType.ONE_PAIR, bestCards, cards);
             }
             List<Card> secondBestPair = cardPairs.get(secondBestRank);
             bestCards.addAll(secondBestPair);
             cards.removeAll(secondBestPair);
-            return new HandEvaluation(HandType.TWO_PAIR, bestCards, cards);
+            return new Evaluation(HandType.TWO_PAIR, bestCards, cards);
         }
         if (bestCount == 3) {
             // Full House
             if (secondBestCount == 2) {
                 bestCards.addAll(cardPairs.get(secondBestRank));
                 cards.removeAll(cardPairs.get(secondBestRank));
-                return new HandEvaluation(HandType.FULL_HOUSE, bestCards, cards);
+                return new Evaluation(HandType.FULL_HOUSE, bestCards, cards);
             }
-            return new HandEvaluation(HandType.THREE_OF_A_KIND, bestCards, cards);
+            return new Evaluation(HandType.THREE_OF_A_KIND, bestCards, cards);
         }
-        return new HandEvaluation(HandType.FOUR_OF_A_KIND, bestCards, cards);
+        return new Evaluation(HandType.FOUR_OF_A_KIND, bestCards, cards);
     }
 
     /**
@@ -115,7 +115,7 @@ public final class HandEvaluator {
      * @param highCardEvaluation the default if no matches exist
      * @return the best poker hand with matching cards or the default if no matches exist
      */
-    private static HandEvaluation getBestMatching(List<Card> combinedCards, HandEvaluation highCardEvaluation) {
+    private static Evaluation getBestMatching(List<Card> combinedCards, Evaluation highCardEvaluation) {
         List<Card> cards = new ArrayList<>(combinedCards);
         Map<Rank, List<Card>> cardRankMap = new HashMap<>();
         // Initialize hashmap
@@ -163,7 +163,7 @@ public final class HandEvaluator {
      * @param highCardHandEvaluation the default if no flush exists
      * @return the best poker hand with a flush or the default if no flush exists
      */
-    private static HandEvaluation getBestFlush(List<Card> combinedCards, HandEvaluation highCardHandEvaluation) {
+    private static Evaluation getBestFlush(List<Card> combinedCards, Evaluation highCardHandEvaluation) {
         List<Card> cards = new ArrayList<>(combinedCards);
         Map<Suit, List<Card>> cardSuitMap = new HashMap<>();
         for (Suit suit : Suit.values()) {
@@ -204,12 +204,12 @@ public final class HandEvaluator {
                 if (consecutiveCards.size() < 5) {
                     List<Card> bestCards = suitCards.subList(suitCards.size() - 5, suitCards.size());
                     cards.removeAll(bestCards);
-                    return new HandEvaluation(HandType.FLUSH, bestCards, cards);
+                    return new Evaluation(HandType.FLUSH, bestCards, cards);
                 }
                 cards.removeAll(consecutiveCards);
                 HandType handType = (consecutiveCards.getFirst().rank() == Rank.ACE) ? HandType.ROYAL_FLUSH : HandType.STRAIGHT_FLUSH;
 
-                return new HandEvaluation(handType, consecutiveCards, cards);
+                return new Evaluation(handType, consecutiveCards, cards);
 
             }
         }
@@ -220,10 +220,10 @@ public final class HandEvaluator {
     /**
      * Gets the best poker hand with a straight.
      * @param combinedCards the 7 combined cards to use
-     * @param highCardHandEvaluation the default if no straight exists
+     * @param highCardEvaluation the default if no straight exists
      * @return the best poker hand with a straight or the default if no straight exists
      */
-    private static HandEvaluation getBestStraight(List<Card> combinedCards, HandEvaluation highCardHandEvaluation) {
+    private static Evaluation getBestStraight(List<Card> combinedCards, Evaluation highCardEvaluation) {
         List<Card> cards = new ArrayList<>(combinedCards);
         Collections.sort(cards);
         // Add aces to the front of the sorted list
@@ -260,20 +260,20 @@ public final class HandEvaluator {
         }
         if (consecutiveCards.size() == 5) {
             cards.removeAll(consecutiveCards);
-            return new HandEvaluation(HandType.STRAIGHT, consecutiveCards, cards);
+            return new Evaluation(HandType.STRAIGHT, consecutiveCards, cards);
         }
-        return highCardHandEvaluation;
+        return highCardEvaluation;
     }
 
-    public static HandEvaluation getHandEvaluation(List<Card> combinedCards) {
+    public static Evaluation getHandEvaluation(List<Card> combinedCards) {
         Objects.requireNonNull(combinedCards);
         List<Card> cards = new ArrayList<>(combinedCards);
         // Calculate default high-card hand
-        HandEvaluation highCardHandEvaluation = new HandEvaluation(HandType.HIGH_CARD, List.of(), cards);
+        Evaluation highCardEvaluation = new Evaluation(HandType.HIGH_CARD, List.of(), cards);
 
-        HandEvaluation bestHandType = highCardHandEvaluation;
+        Evaluation bestHandType = highCardEvaluation;
 
-        HandEvaluation bestFlush = getBestFlush(new ArrayList<>(cards), highCardHandEvaluation);
+        Evaluation bestFlush = getBestFlush(new ArrayList<>(cards), highCardEvaluation);
         if (bestFlush.getHand() == HandType.ROYAL_FLUSH) {
             return bestFlush;
         }
@@ -281,12 +281,12 @@ public final class HandEvaluator {
             bestHandType = bestFlush;
         }
 
-        HandEvaluation bestMatching = getBestMatching(new ArrayList<>(cards), highCardHandEvaluation);
+        Evaluation bestMatching = getBestMatching(new ArrayList<>(cards), highCardEvaluation);
         if (bestMatching.getHand().getValue() > bestHandType.getHand().getValue()) {
             bestHandType = bestMatching;
         }
 
-        HandEvaluation bestStraight = getBestStraight(new ArrayList<>(cards), highCardHandEvaluation);
+        Evaluation bestStraight = getBestStraight(new ArrayList<>(cards), highCardEvaluation);
         if (bestStraight.getHand().getValue() > bestHandType.getHand().getValue()) {
             bestHandType = bestStraight;
         }
@@ -308,42 +308,42 @@ public final class HandEvaluator {
     public static List<Integer> getWinningPlayer(Map<Integer, List<Card>> playerHands, List<Card> communityCards) {
 
         List<Integer> winners = new ArrayList<>();
-        HandEvaluation bestHand = null;
+        Evaluation bestHand = null;
 
         for (Map.Entry<Integer, List<Card>> player : playerHands.entrySet()) {
             List<Card> combinedCards = new ArrayList<>(player.getValue());
             combinedCards.addAll(communityCards);
-            HandEvaluation handEvaluation = getHandEvaluation(combinedCards);
+            Evaluation evaluation = getHandEvaluation(combinedCards);
             if (bestHand == null) {
-                bestHand = handEvaluation;
+                bestHand = evaluation;
                 winners.add(player.getKey());
                 continue;
             }
-            if (handEvaluation.getHand().getValue() < bestHand.getHand().getValue()) {
+            if (evaluation.getHand().getValue() < bestHand.getHand().getValue()) {
                 continue;
             }
             // Hand Type is greater
-            if (handEvaluation.getHand().getValue() > bestHand.getHand().getValue()) {
-                bestHand = handEvaluation;
+            if (evaluation.getHand().getValue() > bestHand.getHand().getValue()) {
+                bestHand = evaluation;
                 winners.clear();
                 winners.add(player.getKey());
                 continue;
             }
             // Hand Types are equal tie
-            if (!handEvaluation.hasKickers() || handEvaluation.getHand() == HandType.ROYAL_FLUSH) {
-                bestHand = handEvaluation;
+            if (!evaluation.hasKickers() || evaluation.getHand() == HandType.ROYAL_FLUSH) {
+                bestHand = evaluation;
                 winners.add(player.getKey());
                 continue;
             }
             // Hand Types are equal kickers to break tie
-            int comparison = compareKickers(handEvaluation.getKickers(), bestHand.getKickers());
+            int comparison = compareKickers(evaluation.getKickers(), bestHand.getKickers());
             if (comparison == 0) {
-                bestHand = handEvaluation;
+                bestHand = evaluation;
                 winners.add(player.getKey());
                 continue;
             }
             if (comparison > 0) {
-                bestHand = handEvaluation;
+                bestHand = evaluation;
                 winners.clear();
                 winners.add(player.getKey());
             }

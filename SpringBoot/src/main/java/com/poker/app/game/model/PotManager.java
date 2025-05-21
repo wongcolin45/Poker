@@ -1,7 +1,6 @@
 package com.poker.app.game.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,12 +12,15 @@ public class PotManager {
 
     private final int[] playerBets;
 
-    private final PlayerRotation rotation;
+    private PlayerRotation rotation;
 
-    public PotManager(int[] playerChips, PlayerRotation rotation) {
+    public PotManager(int[] playerChips) {
         callAmount = 0;
         this.playerChips = Objects.requireNonNull(playerChips).clone();
         this.playerBets = new int[playerChips.length];
+    }
+
+    public void initializeRound(PlayerRotation rotation) {
         this.rotation = Objects.requireNonNull(rotation);
     }
 
@@ -81,15 +83,15 @@ public class PotManager {
         return true;
     }
 
-    public int getPlayerBet(int player) {
-        return playerBets[player];
+    public int[] getPlayerChips() {
+        return playerChips;
     }
 
-    public int getCallAmount() {
-        return callAmount;
+    public int[] getPlayerBets() {
+        return playerBets;
     }
 
-    public int[] getPayouts(List<Integer> winners) {
+    public void payoutWinners(List<Integer> winners) {
         Objects.requireNonNull(winners);
         int[] payouts = new int[playerBets.length];
         if (winners.size() == 1 || winners.stream().distinct().count() <= 1) {
@@ -100,7 +102,11 @@ public class PotManager {
             for (int winner : winners) {
                 payouts[winner] = totalPot / winners.size();
             }
-            return payouts;
+            // make payouts
+            for (int i = 0; i < playerChips.length; i++) {
+                playerChips[i] += payouts[i];
+            }
+            return;
         }
         List<Integer> sortedWinners = new ArrayList<>(winners);
         sortedWinners.sort((a, b) -> Integer.compare(playerBets[a], playerBets[b]));
@@ -111,7 +117,9 @@ public class PotManager {
                 payouts[sortedWinners.get(j)] += payout;
             }
         }
-        return payouts;
+        for (int i = 0; i < playerChips.length; i++) {
+            playerChips[i] += payouts[i];
+        }
     }
 
 

@@ -14,11 +14,16 @@ public enum Rank {
         return value;
     }
 
-    @Override
-    public String toString() {
-        if (this == TEN) {
-            return "10";
+    public String getSymbol() {
+        if (value == 14) {
+            return "A";
+        } else if (value == 13) {
+            return "K";
+        } else if (value == 12) {
+            return "Q";
+        } else if (value == 11) {
+            return "J";
         }
-        return name().substring(0, 1).toUpperCase();
+        return String.valueOf(value);
     }
 }

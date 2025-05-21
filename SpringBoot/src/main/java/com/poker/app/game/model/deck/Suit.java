@@ -9,8 +9,8 @@ public enum Suit {
         this.symbol = symbol;
     }
 
-    @Override
-    public String toString() {
+
+    public String getSymbol() {
         return symbol;
     }
 

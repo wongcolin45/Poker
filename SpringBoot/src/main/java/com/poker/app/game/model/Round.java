@@ -34,7 +34,7 @@ public class Round {
 
     private final PotManager potManager;
 
-    private final GameModel model;
+    private final PokerModel model;
 
     private void endBettingRound() {
         if (bettingRound == 1) {
@@ -47,16 +47,19 @@ public class Round {
         bettingRound++;
     }
 
-    public Round(GameModel model, int start, int smallBlind, int bigBlind) {
+    public Round(PokerModel model, int start, int smallBlind, int bigBlind, PotManager potManager) {
         if (model.getRotation().singlePlayer()) {
             throw new IllegalArgumentException("Single player round not supported");
         }
-        if (model.getPlayerChips(turn) < smallBlind || model.getPlayerChips(turn) < bigBlind) {
+        int[] chips =  potManager.getPlayerChips();
+        if (chips[smallBlind] < smallBlind || chips[bigBlind] < bigBlind) {
             throw new IllegalArgumentException("Current big and small blinds don't have enough chips to start round");
         }
         rotation = model.getRotation().copy();
         deck = new Deck();
         this.model = model;
+        this.potManager = potManager;
+        this.potManager.initializeRound(rotation);
         communityCards = new ArrayList<>();
         playerHands = new HashMap<>();
         for (int i = 0; i < rotation.getActiveCount(); i++) {
@@ -64,7 +67,6 @@ public class Round {
             rotation.next();
         }
         turn = start;
-        this.potManager = new PotManager(model.getPlayerChips(), rotation);
         this.start = start;
         loopMade = false;
     }
@@ -99,23 +101,38 @@ public class Round {
         turn = rotation.getNext(turn);
     }
 
-    public List<Card> getCommunityCards() {
-        return new ArrayList<>(communityCards);
+    public int getTurn() {
+        return turn;
+    }
+
+    public int getBettingRound() {
+        return bettingRound;
     }
 
     public boolean isOver() {
         return potManager.playersAllIn() || rotation.singlePlayer() || bettingRound > 5  || potManager.playersAllIn();
     }
 
-    public int[] getPayouts() {
+    public List<Integer> getActivePlayers() {
+        return rotation.getActiveIndexes();
+    }
+
+    public List<Integer> getWinner() {
         if (!isOver()) {
             throw new IllegalStateException("Round is not over, you cannot get the result");
         }
         while (communityCards.size() < 5) {
             communityCards.add(deck.draw());
         }
-        List<Integer> winners = HandEvaluator.getWinningPlayer(playerHands, communityCards);
-        return potManager.getPayouts(winners);
+        return HandEvaluator.getWinningPlayer(playerHands, communityCards);
+    }
+
+    public List<Card> getPlayerCards(int playerIndex) {
+        return List.copyOf(playerHands.get(playerIndex));
+    }
+
+    public List<Card> getCommunityCards() {
+        return new ArrayList<>(communityCards);
     }
 
 

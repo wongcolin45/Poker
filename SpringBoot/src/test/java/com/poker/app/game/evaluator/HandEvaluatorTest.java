@@ -25,7 +25,7 @@ class HandEvaluatorTest {
     private void testHandEvaluation(List<String> cardStrings, HandType expectedHandType) {
         List<Card> cards = CardFactory.getCards(cardStrings);
         Collections.shuffle(cards);
-        HandEvaluator.HandEvaluation result = HandEvaluator.getHandEvaluation(cards);
+        HandEvaluator.Evaluation result = HandEvaluator.getHandEvaluation(cards);
         Assertions.assertEquals(expectedHandType, result.getHand());
     }
 

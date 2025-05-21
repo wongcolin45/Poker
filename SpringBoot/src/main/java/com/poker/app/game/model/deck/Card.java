@@ -6,10 +6,12 @@ public record Card(Rank rank, Suit suit) implements Comparable<Card> {
         return new Card(rank, suit);
     }
 
-    @Override
-    public String toString() {
+
+    public String getSymbol() {
         return rank.toString() + suit.toString();
     }
+
+
 
     @Override
     public boolean equals(Object obj) {
@@ -22,6 +24,10 @@ public record Card(Rank rank, Suit suit) implements Comparable<Card> {
     @Override
     public int compareTo(Card card) {
         return this.rank.getValue() - card.rank.getValue();
+    }
+    @Override
+    public String toString() {
+        return rank.toString() +" OF " +suit.toString();
     }
 
 
